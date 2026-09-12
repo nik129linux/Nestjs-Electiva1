@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 
 interface Product {
     id: number;
@@ -52,5 +52,55 @@ export class ProductosController {
         return this.products.filter(
             product => product.category.toLowerCase() === category.toLowerCase()
         );
+    }
+
+    // Crear un producto
+    @Post()
+    createProduct(@Body() newProduct: Product) {
+        const existingProduct = this.products.find(
+            product => product.id === Number(newProduct.id)
+        );
+
+        if (existingProduct) {
+            return { message: 'El producto con ese ID ya existe.' };
+        }
+
+        this.products.push({ ...newProduct, id: Number(newProduct.id) });
+        return {
+            message: 'Producto creado con exito.',
+            data: newProduct,
+        };
+    }
+
+    // Eliminar un producto
+    @Delete(':id')
+    deleteProduct(@Param('id') id: string) {
+        const position = this.products.findIndex(product => product.id === Number(id));
+
+        if (position === -1) {
+            return { message: 'El producto con ese ID no existe.' };
+        }
+
+        this.products.splice(position, 1);
+        return { message: 'Producto eliminado con exito.' };
+    }
+
+    // Actualizar un producto
+    @Put(':id')
+    updateProduct(@Param('id') id: string, @Body() productChanges: Product) {
+        const position = this.products.findIndex(product => product.id === Number(id));
+
+        if (position === -1) {
+            return { message: 'El producto con ese ID no existe.' };
+        }
+
+        const existingProduct = this.products[position];
+        const updatedProduct = { ...existingProduct, ...productChanges, id: existingProduct.id };
+        this.products[position] = updatedProduct;
+
+        return {
+            message: 'Producto actualizado con exito.',
+            data: updatedProduct,
+        };
     }
 }
