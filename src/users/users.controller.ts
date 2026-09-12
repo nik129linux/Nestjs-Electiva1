@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 
 interface User {
     id: number;
@@ -53,5 +53,55 @@ export class UsersController {
             return { result: 'Usuario no encontrado' };
         }
 
+    }
+
+    // Crear un usuario
+    @Post()
+    createUser(@Body() newUser: User) {
+        const existingUser = this.users.find(
+            user => user.id === Number(newUser.id) || user.email === newUser.email
+        );
+
+        if (existingUser) {
+            return { message: 'El usuario con ese ID y/o correo ya existe.' };
+        }
+
+        this.users.push({ ...newUser, id: Number(newUser.id) });
+        return {
+            message: 'Usuario creado con exito.',
+            data: newUser,
+        };
+    }
+
+    // Eliminar un usuario
+    @Delete(':id')
+    deleteUser(@Param('id') id: string) {
+        const position = this.users.findIndex(user => user.id === Number(id));
+
+        if (position === -1) {
+            return { message: 'El usuario con ese ID no existe.' };
+        }
+
+        this.users.splice(position, 1);
+        return { message: 'Usuario eliminado con exito.' };
+    }
+
+    // Actualizar un usuario
+    @Put(':id')
+    updateUser(@Param('id') id: string, @Body() userChanges: User) {
+        const position = this.users.findIndex(user => user.id === Number(id));
+
+        if (position === -1) {
+            return { message: 'El usuario con ese ID no existe.' };
+        }
+
+        const existingUser = this.users[position];
+        const updatedUser = { ...existingUser, ...userChanges, id: existingUser.id };
+        this.users[position] = updatedUser;
+
+        return {
+            message: 'Usuario actualizado con exito.',
+            data: updatedUser,
+        };
     }
 }
